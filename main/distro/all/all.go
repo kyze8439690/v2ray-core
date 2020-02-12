@@ -23,7 +23,6 @@ import (
 	_ "v2ray.com/core/app/stats"
 
 	// Inbound and outbound proxies.
-	_ "v2ray.com/core/proxy/blackhole"
 	_ "v2ray.com/core/proxy/dns"
 	_ "v2ray.com/core/proxy/dokodemo"
 	_ "v2ray.com/core/proxy/http"
