@@ -22,7 +22,6 @@ var (
 
 	outboundConfigLoader = NewJSONConfigLoader(ConfigCreatorCache{
 		"blackhole":   func() interface{} { return new(BlackholeConfig) },
-		"freedom":     func() interface{} { return new(FreedomConfig) },
 		"http":        func() interface{} { return new(HttpClientConfig) },
 		"vmess":       func() interface{} { return new(VMessOutboundConfig) },
 		"socks":       func() interface{} { return new(SocksClientConfig) },
