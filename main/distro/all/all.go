@@ -25,7 +25,6 @@ import (
 	// Inbound and outbound proxies.
 	_ "v2ray.com/core/proxy/dns"
 	_ "v2ray.com/core/proxy/http"
-	_ "v2ray.com/core/proxy/mtproto"
 	_ "v2ray.com/core/proxy/socks"
 	_ "v2ray.com/core/proxy/vmess/inbound"
 	_ "v2ray.com/core/proxy/vmess/outbound"

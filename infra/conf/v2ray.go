@@ -16,14 +16,12 @@ var (
 		"http":    func() interface{} { return new(HttpServerConfig) },
 		"socks":   func() interface{} { return new(SocksServerConfig) },
 		"vmess":   func() interface{} { return new(VMessInboundConfig) },
-		"mtproto": func() interface{} { return new(MTProtoServerConfig) },
 	}, "protocol", "settings")
 
 	outboundConfigLoader = NewJSONConfigLoader(ConfigCreatorCache{
 		"http":    func() interface{} { return new(HttpClientConfig) },
 		"vmess":   func() interface{} { return new(VMessOutboundConfig) },
 		"socks":   func() interface{} { return new(SocksClientConfig) },
-		"mtproto": func() interface{} { return new(MTProtoClientConfig) },
 		"dns":     func() interface{} { return new(DnsOutboundConfig) },
 	}, "protocol", "settings")
 )
