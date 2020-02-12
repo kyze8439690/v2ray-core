@@ -13,19 +13,18 @@ import (
 
 var (
 	inboundConfigLoader = NewJSONConfigLoader(ConfigCreatorCache{
-		"dokodemo-door": func() interface{} { return new(DokodemoConfig) },
-		"http":          func() interface{} { return new(HttpServerConfig) },
-		"socks":         func() interface{} { return new(SocksServerConfig) },
-		"vmess":         func() interface{} { return new(VMessInboundConfig) },
-		"mtproto":       func() interface{} { return new(MTProtoServerConfig) },
+		"http":    func() interface{} { return new(HttpServerConfig) },
+		"socks":   func() interface{} { return new(SocksServerConfig) },
+		"vmess":   func() interface{} { return new(VMessInboundConfig) },
+		"mtproto": func() interface{} { return new(MTProtoServerConfig) },
 	}, "protocol", "settings")
 
 	outboundConfigLoader = NewJSONConfigLoader(ConfigCreatorCache{
-		"http":        func() interface{} { return new(HttpClientConfig) },
-		"vmess":       func() interface{} { return new(VMessOutboundConfig) },
-		"socks":       func() interface{} { return new(SocksClientConfig) },
-		"mtproto":     func() interface{} { return new(MTProtoClientConfig) },
-		"dns":         func() interface{} { return new(DnsOutboundConfig) },
+		"http":    func() interface{} { return new(HttpClientConfig) },
+		"vmess":   func() interface{} { return new(VMessOutboundConfig) },
+		"socks":   func() interface{} { return new(SocksClientConfig) },
+		"mtproto": func() interface{} { return new(MTProtoClientConfig) },
+		"dns":     func() interface{} { return new(DnsOutboundConfig) },
 	}, "protocol", "settings")
 )
 
@@ -198,9 +197,6 @@ func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 	rawConfig, err := inboundConfigLoader.LoadWithID(settings, c.Protocol)
 	if err != nil {
 		return nil, newError("failed to load inbound detour config.").Base(err)
-	}
-	if dokodemoConfig, ok := rawConfig.(*DokodemoConfig); ok {
-		receiverSettings.ReceiveOriginalDestination = dokodemoConfig.Redirect
 	}
 	ts, err := rawConfig.(Buildable).Build()
 	if err != nil {
