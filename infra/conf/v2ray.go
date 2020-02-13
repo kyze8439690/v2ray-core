@@ -276,7 +276,6 @@ func (c *StatsConfig) Build() (*stats.Config, error) {
 }
 
 type Config struct {
-	Port            uint16                 `json:"port"` // Port of this Point server. Deprecated.
 	LogConfig       *LogConfig             `json:"log"`
 	RouterConfig    *RouterConfig          `json:"routing"`
 	InboundConfigs  []InboundDetourConfig  `json:"inbounds"`
@@ -382,14 +381,6 @@ func (c *Config) Build() (*core.Config, error) {
 
 	if len(c.InboundConfigs) > 0 {
 		inbounds = append(inbounds, c.InboundConfigs...)
-	}
-
-	// Backward compatibility.
-	if len(inbounds) > 0 && inbounds[0].PortRange == nil && c.Port > 0 {
-		inbounds[0].PortRange = &PortRange{
-			From: uint32(c.Port),
-			To:   uint32(c.Port),
-		}
 	}
 
 	for _, rawInboundConfig := range inbounds {
