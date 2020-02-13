@@ -36,88 +36,6 @@ func toProtocolList(s []string) ([]proxyman.KnownProtocols, error) {
 	return kp, nil
 }
 
-type SniffingConfig struct {
-	Enabled      bool        `json:"enabled"`
-	DestOverride *StringList `json:"destOverride"`
-}
-
-func (c *SniffingConfig) Build() (*proxyman.SniffingConfig, error) {
-	var p []string
-	if c.DestOverride != nil {
-		for _, domainOverride := range *c.DestOverride {
-			switch strings.ToLower(domainOverride) {
-			case "http":
-				p = append(p, "http")
-			case "tls", "https", "ssl":
-				p = append(p, "tls")
-			default:
-				return nil, newError("unknown protocol: ", domainOverride)
-			}
-		}
-	}
-
-	return &proxyman.SniffingConfig{
-		Enabled:             c.Enabled,
-		DestinationOverride: p,
-	}, nil
-}
-
-type MuxConfig struct {
-	Enabled     bool  `json:"enabled"`
-	Concurrency int16 `json:"concurrency"`
-}
-
-// Build creates MultiplexingConfig, Concurrency < 0 completely disables mux.
-func (m *MuxConfig) Build() *proxyman.MultiplexingConfig {
-	if m.Concurrency < 0 {
-		return nil
-	}
-
-	var con uint32 = 8
-	if m.Concurrency > 0 {
-		con = uint32(m.Concurrency)
-	}
-
-	return &proxyman.MultiplexingConfig{
-		Enabled:     m.Enabled,
-		Concurrency: con,
-	}
-}
-
-type InboundDetourAllocationConfig struct {
-	Strategy    string  `json:"strategy"`
-	Concurrency *uint32 `json:"concurrency"`
-	RefreshMin  *uint32 `json:"refresh"`
-}
-
-// Build implements Buildable.
-func (c *InboundDetourAllocationConfig) Build() (*proxyman.AllocationStrategy, error) {
-	config := new(proxyman.AllocationStrategy)
-	switch strings.ToLower(c.Strategy) {
-	case "always":
-		config.Type = proxyman.AllocationStrategy_Always
-	case "random":
-		config.Type = proxyman.AllocationStrategy_Random
-	case "external":
-		config.Type = proxyman.AllocationStrategy_External
-	default:
-		return nil, newError("unknown allocation strategy: ", c.Strategy)
-	}
-	if c.Concurrency != nil {
-		config.Concurrency = &proxyman.AllocationStrategy_AllocationStrategyConcurrency{
-			Value: *c.Concurrency,
-		}
-	}
-
-	if c.RefreshMin != nil {
-		config.Refresh = &proxyman.AllocationStrategy_AllocationStrategyRefresh{
-			Value: *c.RefreshMin,
-		}
-	}
-
-	return config, nil
-}
-
 type InboundDetourConfig struct {
 	Protocol  string           `json:"protocol"`
 	PortRange *PortRange       `json:"port"`
@@ -164,25 +82,14 @@ func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 
 type OutboundDetourConfig struct {
 	Protocol      string           `json:"protocol"`
-	SendThrough   *Address         `json:"sendThrough"`
 	Tag           string           `json:"tag"`
 	Settings      *json.RawMessage `json:"settings"`
 	StreamSetting *StreamConfig    `json:"streamSettings"`
-	ProxySettings *ProxyConfig     `json:"proxySettings"`
-	MuxSettings   *MuxConfig       `json:"mux"`
 }
 
 // Build implements Buildable.
 func (c *OutboundDetourConfig) Build() (*core.OutboundHandlerConfig, error) {
 	senderSettings := &proxyman.SenderConfig{}
-
-	if c.SendThrough != nil {
-		address := c.SendThrough
-		if address.Family().IsDomain() {
-			return nil, newError("unable to send through: " + address.String())
-		}
-		senderSettings.Via = address.Build()
-	}
 
 	if c.StreamSetting != nil {
 		ss, err := c.StreamSetting.Build()
@@ -190,18 +97,6 @@ func (c *OutboundDetourConfig) Build() (*core.OutboundHandlerConfig, error) {
 			return nil, err
 		}
 		senderSettings.StreamSettings = ss
-	}
-
-	if c.ProxySettings != nil {
-		ps, err := c.ProxySettings.Build()
-		if err != nil {
-			return nil, newError("invalid outbound detour proxy settings.").Base(err)
-		}
-		senderSettings.ProxySettings = ps
-	}
-
-	if c.MuxSettings != nil {
-		senderSettings.MultiplexSettings = c.MuxSettings.Build()
 	}
 
 	settings := []byte("{}")
