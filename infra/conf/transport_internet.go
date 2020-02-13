@@ -14,13 +14,6 @@ import (
 	"v2ray.com/core/transport/internet/websocket"
 )
 
-var (
-	tcpHeaderLoader = NewJSONConfigLoader(ConfigCreatorCache{
-		"none": func() interface{} { return new(NoOpConnectionAuthenticator) },
-		"http": func() interface{} { return new(HTTPAuthenticator) },
-	}, "type", "")
-)
-
 type TCPConfig struct {
 	HeaderConfig json.RawMessage `json:"header"`
 }
@@ -28,18 +21,6 @@ type TCPConfig struct {
 // Build implements Buildable.
 func (c *TCPConfig) Build() (proto.Message, error) {
 	config := new(tcp.Config)
-	if len(c.HeaderConfig) > 0 {
-		headerConfig, _, err := tcpHeaderLoader.Load(c.HeaderConfig)
-		if err != nil {
-			return nil, newError("invalid TCP header config").Base(err).AtError()
-		}
-		ts, err := headerConfig.(Buildable).Build()
-		if err != nil {
-			return nil, newError("invalid TCP header config").Base(err).AtError()
-		}
-		config.HeaderSettings = serial.ToTypedMessage(ts)
-	}
-
 	return config, nil
 }
 
