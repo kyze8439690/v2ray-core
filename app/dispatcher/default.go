@@ -6,7 +6,6 @@ package dispatcher
 
 import (
 	"context"
-	"strings"
 	"sync"
 	"time"
 
@@ -176,12 +175,7 @@ func (d *DefaultDispatcher) getLink(ctx context.Context) (*transport.Link, *tran
 	return inboundLink, outboundLink
 }
 
-func shouldOverride(result SniffResult, domainOverride []string) bool {
-	for _, p := range domainOverride {
-		if strings.HasPrefix(result.Protocol(), p) {
-			return true
-		}
-	}
+func shouldOverride(domainOverride []string) bool {
 	return false
 }
 
@@ -210,50 +204,10 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 				reader: outbound.Reader.(*pipe.Reader),
 			}
 			outbound.Reader = cReader
-			result, err := sniffer(ctx, cReader)
-			if err == nil {
-				content.Protocol = result.Protocol()
-			}
-			if err == nil && shouldOverride(result, sniffingRequest.OverrideDestinationForProtocol) {
-				domain := result.Domain()
-				newError("sniffed domain: ", domain).WriteToLog(session.ExportIDToError(ctx))
-				destination.Address = net.ParseAddress(domain)
-				ob.Target = destination
-			}
 			d.routedDispatch(ctx, outbound, destination)
 		}()
 	}
 	return inbound, nil
-}
-
-func sniffer(ctx context.Context, cReader *cachedReader) (SniffResult, error) {
-	payload := buf.New()
-	defer payload.Release()
-
-	sniffer := NewSniffer()
-	totalAttempt := 0
-	for {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-			totalAttempt++
-			if totalAttempt > 2 {
-				return nil, errSniffingTimeout
-			}
-
-			cReader.Cache(payload)
-			if !payload.IsEmpty() {
-				result, err := sniffer.Sniff(payload.Bytes())
-				if err != common.ErrNoClue {
-					return result, err
-				}
-			}
-			if payload.IsFull() {
-				return nil, errUnknownContent
-			}
-		}
-	}
 }
 
 func (d *DefaultDispatcher) routedDispatch(ctx context.Context, link *transport.Link, destination net.Destination) {
