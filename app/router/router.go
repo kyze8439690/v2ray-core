@@ -79,17 +79,6 @@ func (r *Router) pickRouteInternal(ctx context.Context) (*Rule, error) {
 		}
 	}
 
-	if r.domainStrategy != Config_IpIfNonMatch || !isDomainOutbound(sessionContext.Outbound) {
-		return nil, common.ErrNoClue
-	}
-
-	// Try applying rules again if we have IPs.
-	for _, rule := range r.rules {
-		if rule.Apply(sessionContext) {
-			return rule, nil
-		}
-	}
-
 	return nil, common.ErrNoClue
 }
 

@@ -18,26 +18,17 @@ type RouterRulesConfig struct {
 }
 
 type RouterConfig struct {
-	Settings       *RouterRulesConfig `json:"settings"` // Deprecated
-	RuleList       []json.RawMessage  `json:"rules"`
-	DomainStrategy *string            `json:"domainStrategy"`
+	RuleList       []json.RawMessage `json:"rules"`
+	DomainStrategy *string           `json:"domainStrategy"`
 }
 
 func (c *RouterConfig) getDomainStrategy() router.Config_DomainStrategy {
 	ds := ""
 	if c.DomainStrategy != nil {
 		ds = *c.DomainStrategy
-	} else if c.Settings != nil {
-		ds = c.Settings.DomainStrategy
 	}
 
 	switch strings.ToLower(ds) {
-	case "alwaysip":
-		return router.Config_UseIp
-	case "ipifnonmatch":
-		return router.Config_IpIfNonMatch
-	case "ipondemand":
-		return router.Config_IpOnDemand
 	default:
 		return router.Config_AsIs
 	}
@@ -48,9 +39,6 @@ func (c *RouterConfig) Build() (*router.Config, error) {
 	config.DomainStrategy = c.getDomainStrategy()
 
 	rawRuleList := c.RuleList
-	if c.Settings != nil {
-		rawRuleList = append(c.RuleList, c.Settings.RuleList...)
-	}
 	for _, rawRule := range rawRuleList {
 		rule, err := ParseRule(rawRule)
 		if err != nil {
