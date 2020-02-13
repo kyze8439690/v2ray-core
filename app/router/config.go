@@ -4,7 +4,6 @@ package router
 
 import (
 	"v2ray.com/core/common/net"
-	"v2ray.com/core/features/outbound"
 )
 
 // CIDRList is an alias of []*CIDR to provide sort.Interface.
@@ -48,14 +47,10 @@ func (l *CIDRList) Swap(i int, j int) {
 
 type Rule struct {
 	Tag       string
-	Balancer  *Balancer
 	Condition Condition
 }
 
 func (r *Rule) GetTag() (string, error) {
-	if r.Balancer != nil {
-		return r.Balancer.PickOutbound()
-	}
 	return r.Tag, nil
 }
 
@@ -139,12 +134,4 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 	}
 
 	return conds, nil
-}
-
-func (br *BalancingRule) Build(ohm outbound.Manager) (*Balancer, error) {
-	return &Balancer{
-		selectors: br.OutboundSelector,
-		strategy:  &RandomStrategy{},
-		ohm:       ohm,
-	}, nil
 }

@@ -31,21 +31,11 @@ func init() {
 type Router struct {
 	domainStrategy Config_DomainStrategy
 	rules          []*Rule
-	balancers      map[string]*Balancer
 }
 
 // Init initializes the Router.
 func (r *Router) Init(config *Config, ohm outbound.Manager) error {
 	r.domainStrategy = config.DomainStrategy
-
-	r.balancers = make(map[string]*Balancer, len(config.BalancingRule))
-	for _, rule := range config.BalancingRule {
-		balancer, err := rule.Build(ohm)
-		if err != nil {
-			return err
-		}
-		r.balancers[rule.Tag] = balancer
-	}
 
 	r.rules = make([]*Rule, 0, len(config.Rule))
 	for _, rule := range config.Rule {
@@ -56,14 +46,6 @@ func (r *Router) Init(config *Config, ohm outbound.Manager) error {
 		rr := &Rule{
 			Condition: cond,
 			Tag:       rule.GetTag(),
-		}
-		btag := rule.GetBalancingTag()
-		if len(btag) > 0 {
-			brule, found := r.balancers[btag]
-			if !found {
-				return newError("balancer ", btag, " not found")
-			}
-			rr.Balancer = brule
 		}
 		r.rules = append(r.rules, rr)
 	}
