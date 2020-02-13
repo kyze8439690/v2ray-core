@@ -8,10 +8,8 @@ import (
 
 type TransportConfig struct {
 	TCPConfig  *TCPConfig       `json:"tcpSettings"`
-	KCPConfig  *KCPConfig       `json:"kcpSettings"`
 	WSConfig   *WebSocketConfig `json:"wsSettings"`
 	HTTPConfig *HTTPConfig      `json:"httpSettings"`
-	QUICConfig *QUICConfig      `json:"quicSettings"`
 }
 
 // Build implements Buildable.
@@ -25,17 +23,6 @@ func (c *TransportConfig) Build() (*transport.Config, error) {
 		}
 		config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
 			ProtocolName: "tcp",
-			Settings:     serial.ToTypedMessage(ts),
-		})
-	}
-
-	if c.KCPConfig != nil {
-		ts, err := c.KCPConfig.Build()
-		if err != nil {
-			return nil, newError("failed to build mKCP config").Base(err).AtError()
-		}
-		config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
-			ProtocolName: "mkcp",
 			Settings:     serial.ToTypedMessage(ts),
 		})
 	}
@@ -59,17 +46,6 @@ func (c *TransportConfig) Build() (*transport.Config, error) {
 		config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
 			ProtocolName: "http",
 			Settings:     serial.ToTypedMessage(ts),
-		})
-	}
-
-	if c.QUICConfig != nil {
-		qs, err := c.QUICConfig.Build()
-		if err != nil {
-			return nil, newError("Failed to build QUIC config.").Base(err)
-		}
-		config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
-			ProtocolName: "quic",
-			Settings:     serial.ToTypedMessage(qs),
 		})
 	}
 
