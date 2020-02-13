@@ -112,47 +112,6 @@ func getIPsFromTarget(ctx *Context) []net.IP {
 	return ctx.GetTargetIPs()
 }
 
-type MultiGeoIPMatcher struct {
-	matchers []*GeoIPMatcher
-	ipFunc   func(*Context) []net.IP
-}
-
-func NewMultiGeoIPMatcher(geoips []*GeoIP, onSource bool) (*MultiGeoIPMatcher, error) {
-	var matchers []*GeoIPMatcher
-	for _, geoip := range geoips {
-		matcher, err := globalGeoIPContainer.Add(geoip)
-		if err != nil {
-			return nil, err
-		}
-		matchers = append(matchers, matcher)
-	}
-
-	matcher := &MultiGeoIPMatcher{
-		matchers: matchers,
-	}
-
-	if onSource {
-		matcher.ipFunc = getIPsFromSource
-	} else {
-		matcher.ipFunc = getIPsFromTarget
-	}
-
-	return matcher, nil
-}
-
-func (m *MultiGeoIPMatcher) Apply(ctx *Context) bool {
-	ips := m.ipFunc(ctx)
-
-	for _, ip := range ips {
-		for _, matcher := range m.matchers {
-			if matcher.Match(ip) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 type PortMatcher struct {
 	port net.MemoryPortList
 }
