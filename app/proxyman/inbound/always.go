@@ -3,24 +3,15 @@ package inbound
 import (
 	"context"
 
-	"v2ray.com/core"
 	"v2ray.com/core/app/proxyman"
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/dice"
 	"v2ray.com/core/common/errors"
 	"v2ray.com/core/common/mux"
 	"v2ray.com/core/common/net"
-	"v2ray.com/core/features/stats"
 	"v2ray.com/core/proxy"
 	"v2ray.com/core/transport/internet"
 )
-
-func getStatCounter(v *core.Instance, tag string) (stats.Counter, stats.Counter) {
-	var uplinkCounter stats.Counter
-	var downlinkCounter stats.Counter
-
-	return uplinkCounter, downlinkCounter
-}
 
 type AlwaysOnInboundHandler struct {
 	proxy   proxy.Inbound
@@ -44,8 +35,6 @@ func NewAlwaysOnInboundHandler(ctx context.Context, tag string, receiverConfig *
 		mux:   mux.NewServer(ctx),
 		tag:   tag,
 	}
-
-	uplinkCounter, downlinkCounter := getStatCounter(core.MustFromContext(ctx), tag)
 
 	nl := p.Network()
 	pr := receiverConfig.PortRange
@@ -74,29 +63,25 @@ func NewAlwaysOnInboundHandler(ctx context.Context, tag string, receiverConfig *
 			newError("creating stream worker on ", address, ":", port).AtDebug().WriteToLog()
 
 			worker := &tcpWorker{
-				address:         address,
-				port:            net.Port(port),
-				proxy:           p,
-				stream:          mss,
-				recvOrigDest:    receiverConfig.ReceiveOriginalDestination,
-				tag:             tag,
-				dispatcher:      h.mux,
-				uplinkCounter:   uplinkCounter,
-				downlinkCounter: downlinkCounter,
+				address:      address,
+				port:         net.Port(port),
+				proxy:        p,
+				stream:       mss,
+				recvOrigDest: receiverConfig.ReceiveOriginalDestination,
+				tag:          tag,
+				dispatcher:   h.mux,
 			}
 			h.workers = append(h.workers, worker)
 		}
 
 		if net.HasNetwork(nl, net.Network_UDP) {
 			worker := &udpWorker{
-				tag:             tag,
-				proxy:           p,
-				address:         address,
-				port:            net.Port(port),
-				dispatcher:      h.mux,
-				uplinkCounter:   uplinkCounter,
-				downlinkCounter: downlinkCounter,
-				stream:          mss,
+				tag:        tag,
+				proxy:      p,
+				address:    address,
+				port:       net.Port(port),
+				dispatcher: h.mux,
+				stream:     mss,
 			}
 			h.workers = append(h.workers, worker)
 		}

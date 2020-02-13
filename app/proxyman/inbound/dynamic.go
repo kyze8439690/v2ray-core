@@ -111,8 +111,6 @@ func (h *DynamicInboundHandler) refresh() error {
 		address = net.AnyIP
 	}
 
-	uplinkCounter, downlinkCounter := getStatCounter(h.v, h.tag)
-
 	for i := uint32(0); i < concurrency; i++ {
 		port := h.allocatePort()
 		rawProxy, err := core.CreateObject(h.v, h.proxyConfig)
@@ -124,15 +122,13 @@ func (h *DynamicInboundHandler) refresh() error {
 		nl := p.Network()
 		if net.HasNetwork(nl, net.Network_TCP) {
 			worker := &tcpWorker{
-				tag:             h.tag,
-				address:         address,
-				port:            port,
-				proxy:           p,
-				stream:          h.streamSettings,
-				recvOrigDest:    h.receiverConfig.ReceiveOriginalDestination,
-				dispatcher:      h.mux,
-				uplinkCounter:   uplinkCounter,
-				downlinkCounter: downlinkCounter,
+				tag:          h.tag,
+				address:      address,
+				port:         port,
+				proxy:        p,
+				stream:       h.streamSettings,
+				recvOrigDest: h.receiverConfig.ReceiveOriginalDestination,
+				dispatcher:   h.mux,
 			}
 			if err := worker.Start(); err != nil {
 				newError("failed to create TCP worker").Base(err).AtWarning().WriteToLog()
@@ -143,14 +139,12 @@ func (h *DynamicInboundHandler) refresh() error {
 
 		if net.HasNetwork(nl, net.Network_UDP) {
 			worker := &udpWorker{
-				tag:             h.tag,
-				proxy:           p,
-				address:         address,
-				port:            port,
-				dispatcher:      h.mux,
-				uplinkCounter:   uplinkCounter,
-				downlinkCounter: downlinkCounter,
-				stream:          h.streamSettings,
+				tag:        h.tag,
+				proxy:      p,
+				address:    address,
+				port:       port,
+				dispatcher: h.mux,
+				stream:     h.streamSettings,
 			}
 			if err := worker.Start(); err != nil {
 				newError("failed to create UDP worker").Base(err).AtWarning().WriteToLog()

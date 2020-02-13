@@ -5,13 +5,11 @@ import (
 )
 
 type Policy struct {
-	Handshake         *uint32 `json:"handshake"`
-	ConnectionIdle    *uint32 `json:"connIdle"`
-	UplinkOnly        *uint32 `json:"uplinkOnly"`
-	DownlinkOnly      *uint32 `json:"downlinkOnly"`
-	StatsUserUplink   bool    `json:"statsUserUplink"`
-	StatsUserDownlink bool    `json:"statsUserDownlink"`
-	BufferSize        *int32  `json:"bufferSize"`
+	Handshake      *uint32 `json:"handshake"`
+	ConnectionIdle *uint32 `json:"connIdle"`
+	UplinkOnly     *uint32 `json:"uplinkOnly"`
+	DownlinkOnly   *uint32 `json:"downlinkOnly"`
+	BufferSize     *int32  `json:"bufferSize"`
 }
 
 func (t *Policy) Build() (*policy.Policy, error) {
@@ -31,10 +29,6 @@ func (t *Policy) Build() (*policy.Policy, error) {
 
 	p := &policy.Policy{
 		Timeout: config,
-		Stats: &policy.Policy_Stats{
-			UserUplink:   t.StatsUserUplink,
-			UserDownlink: t.StatsUserDownlink,
-		},
 	}
 
 	if t.BufferSize != nil {
@@ -51,17 +45,10 @@ func (t *Policy) Build() (*policy.Policy, error) {
 }
 
 type SystemPolicy struct {
-	StatsInboundUplink   bool `json:"statsInboundUplink"`
-	StatsInboundDownlink bool `json:"statsInboundDownlink"`
 }
 
 func (p *SystemPolicy) Build() (*policy.SystemPolicy, error) {
-	return &policy.SystemPolicy{
-		Stats: &policy.SystemPolicy_Stats{
-			InboundUplink:   p.StatsInboundUplink,
-			InboundDownlink: p.StatsInboundDownlink,
-		},
-	}, nil
+	return &policy.SystemPolicy{}, nil
 }
 
 type PolicyConfig struct {

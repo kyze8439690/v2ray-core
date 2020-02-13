@@ -18,7 +18,6 @@ import (
 	"v2ray.com/core/features/outbound"
 	"v2ray.com/core/features/policy"
 	"v2ray.com/core/features/routing"
-	"v2ray.com/core/features/stats"
 	"v2ray.com/core/transport"
 	"v2ray.com/core/transport/pipe"
 )
@@ -87,14 +86,13 @@ type DefaultDispatcher struct {
 	ohm    outbound.Manager
 	router routing.Router
 	policy policy.Manager
-	stats  stats.Manager
 }
 
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		d := new(DefaultDispatcher)
-		if err := core.RequireFeatures(ctx, func(om outbound.Manager, router routing.Router, pm policy.Manager, sm stats.Manager) error {
-			return d.Init(config.(*Config), om, router, pm, sm)
+		if err := core.RequireFeatures(ctx, func(om outbound.Manager, router routing.Router, pm policy.Manager) error {
+			return d.Init(config.(*Config), om, router, pm)
 		}); err != nil {
 			return nil, err
 		}
@@ -103,11 +101,10 @@ func init() {
 }
 
 // Init initializes DefaultDispatcher.
-func (d *DefaultDispatcher) Init(config *Config, om outbound.Manager, router routing.Router, pm policy.Manager, sm stats.Manager) error {
+func (d *DefaultDispatcher) Init(config *Config, om outbound.Manager, router routing.Router, pm policy.Manager) error {
 	d.ohm = om
 	d.router = router
 	d.policy = pm
-	d.stats = sm
 	return nil
 }
 

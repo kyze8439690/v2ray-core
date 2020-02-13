@@ -14,7 +14,6 @@ import (
 	"v2ray.com/core/features/outbound"
 	"v2ray.com/core/features/policy"
 	"v2ray.com/core/features/routing"
-	"v2ray.com/core/features/stats"
 )
 
 // Server is an instance of V2Ray. At any time, there must be at most one Server instance running.
@@ -186,7 +185,6 @@ func New(config *Config) (*Instance, error) {
 	}{
 		{policy.ManagerType(), policy.DefaultManager{}},
 		{routing.RouterType(), routing.DefaultRouter{}},
-		{stats.ManagerType(), stats.NoopManager{}},
 	}
 
 	for _, f := range essentialFeatures {
