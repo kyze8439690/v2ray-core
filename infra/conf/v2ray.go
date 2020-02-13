@@ -13,15 +13,11 @@ import (
 
 var (
 	inboundConfigLoader = NewJSONConfigLoader(ConfigCreatorCache{
-		"http":  func() interface{} { return new(HttpServerConfig) },
 		"socks": func() interface{} { return new(SocksServerConfig) },
-		"vmess": func() interface{} { return new(VMessInboundConfig) },
 	}, "protocol", "settings")
 
 	outboundConfigLoader = NewJSONConfigLoader(ConfigCreatorCache{
-		"http":  func() interface{} { return new(HttpClientConfig) },
 		"vmess": func() interface{} { return new(VMessOutboundConfig) },
-		"socks": func() interface{} { return new(SocksClientConfig) },
 	}, "protocol", "settings")
 )
 
@@ -282,7 +278,6 @@ type Config struct {
 	OutboundConfigs []OutboundDetourConfig `json:"outbounds"`
 	Transport       *TransportConfig       `json:"transport"`
 	Policy          *PolicyConfig          `json:"policy"`
-	Api             *ApiConfig             `json:"api"`
 	Stats           *StatsConfig           `json:"stats"`
 	Reverse         *ReverseConfig         `json:"reverse"`
 }
@@ -313,14 +308,6 @@ func (c *Config) Build() (*core.Config, error) {
 			serial.ToTypedMessage(&proxyman.InboundConfig{}),
 			serial.ToTypedMessage(&proxyman.OutboundConfig{}),
 		},
-	}
-
-	if c.Api != nil {
-		apiConf, err := c.Api.Build()
-		if err != nil {
-			return nil, err
-		}
-		config.App = append(config.App, serial.ToTypedMessage(apiConf))
 	}
 
 	if c.Stats != nil {
