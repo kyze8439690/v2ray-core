@@ -9,7 +9,6 @@ import (
 	"v2ray.com/core/common/protocol"
 	"v2ray.com/core/common/serial"
 	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/internet/domainsocket"
 	"v2ray.com/core/transport/internet/http"
 	"v2ray.com/core/transport/internet/kcp"
 	"v2ray.com/core/transport/internet/quic"
@@ -207,18 +206,6 @@ func (c *QUICConfig) Build() (proto.Message, error) {
 	return config, nil
 }
 
-type DomainSocketConfig struct {
-	Path     string `json:"path"`
-	Abstract bool   `json:"abstract"`
-}
-
-func (c *DomainSocketConfig) Build() (proto.Message, error) {
-	return &domainsocket.Config{
-		Path:     c.Path,
-		Abstract: c.Abstract,
-	}, nil
-}
-
 type TLSCertConfig struct {
 	CertFile string   `json:"certificateFile"`
 	CertStr  []string `json:"certificate"`
@@ -314,8 +301,6 @@ func (p TransportProtocol) Build() (string, error) {
 		return "websocket", nil
 	case "h2", "http":
 		return "http", nil
-	case "ds", "domainsocket":
-		return "domainsocket", nil
 	case "quic":
 		return "quic", nil
 	default:
@@ -356,16 +341,15 @@ func (c *SocketConfig) Build() (*internet.SocketConfig, error) {
 }
 
 type StreamConfig struct {
-	Network        *TransportProtocol  `json:"network"`
-	Security       string              `json:"security"`
-	TLSSettings    *TLSConfig          `json:"tlsSettings"`
-	TCPSettings    *TCPConfig          `json:"tcpSettings"`
-	KCPSettings    *KCPConfig          `json:"kcpSettings"`
-	WSSettings     *WebSocketConfig    `json:"wsSettings"`
-	HTTPSettings   *HTTPConfig         `json:"httpSettings"`
-	DSSettings     *DomainSocketConfig `json:"dsSettings"`
-	QUICSettings   *QUICConfig         `json:"quicSettings"`
-	SocketSettings *SocketConfig       `json:"sockopt"`
+	Network        *TransportProtocol `json:"network"`
+	Security       string             `json:"security"`
+	TLSSettings    *TLSConfig         `json:"tlsSettings"`
+	TCPSettings    *TCPConfig         `json:"tcpSettings"`
+	KCPSettings    *KCPConfig         `json:"kcpSettings"`
+	WSSettings     *WebSocketConfig   `json:"wsSettings"`
+	HTTPSettings   *HTTPConfig        `json:"httpSettings"`
+	QUICSettings   *QUICConfig        `json:"quicSettings"`
+	SocketSettings *SocketConfig      `json:"sockopt"`
 }
 
 // Build implements Buildable.
@@ -431,16 +415,6 @@ func (c *StreamConfig) Build() (*internet.StreamConfig, error) {
 		config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
 			ProtocolName: "http",
 			Settings:     serial.ToTypedMessage(ts),
-		})
-	}
-	if c.DSSettings != nil {
-		ds, err := c.DSSettings.Build()
-		if err != nil {
-			return nil, newError("Failed to build DomainSocket config.").Base(err)
-		}
-		config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
-			ProtocolName: "domainsocket",
-			Settings:     serial.ToTypedMessage(ds),
 		})
 	}
 	if c.QUICSettings != nil {
