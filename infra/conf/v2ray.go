@@ -7,7 +7,6 @@ import (
 	"v2ray.com/core"
 	"v2ray.com/core/app/dispatcher"
 	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/app/stats"
 	"v2ray.com/core/common/serial"
 )
 
@@ -119,19 +118,12 @@ func (c *OutboundDetourConfig) Build() (*core.OutboundHandlerConfig, error) {
 	}, nil
 }
 
-type StatsConfig struct{}
-
-func (c *StatsConfig) Build() (*stats.Config, error) {
-	return &stats.Config{}, nil
-}
-
 type Config struct {
 	LogConfig       *LogConfig             `json:"log"`
 	RouterConfig    *RouterConfig          `json:"routing"`
 	InboundConfigs  []InboundDetourConfig  `json:"inbounds"`
 	OutboundConfigs []OutboundDetourConfig `json:"outbounds"`
 	Policy          *PolicyConfig          `json:"policy"`
-	Stats           *StatsConfig           `json:"stats"`
 }
 
 func applyTransportConfig(s *StreamConfig, t *TransportConfig) {
@@ -154,14 +146,6 @@ func (c *Config) Build() (*core.Config, error) {
 			serial.ToTypedMessage(&proxyman.InboundConfig{}),
 			serial.ToTypedMessage(&proxyman.OutboundConfig{}),
 		},
-	}
-
-	if c.Stats != nil {
-		statsConf, err := c.Stats.Build()
-		if err != nil {
-			return nil, err
-		}
-		config.App = append(config.App, serial.ToTypedMessage(statsConf))
 	}
 
 	var logConfMsg *serial.TypedMessage
