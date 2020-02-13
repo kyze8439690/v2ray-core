@@ -131,7 +131,6 @@ func (h *DynamicInboundHandler) refresh() error {
 				stream:          h.streamSettings,
 				recvOrigDest:    h.receiverConfig.ReceiveOriginalDestination,
 				dispatcher:      h.mux,
-				sniffingConfig:  h.receiverConfig.GetEffectiveSniffingSettings(),
 				uplinkCounter:   uplinkCounter,
 				downlinkCounter: downlinkCounter,
 			}
