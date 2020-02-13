@@ -13,16 +13,15 @@ import (
 
 var (
 	inboundConfigLoader = NewJSONConfigLoader(ConfigCreatorCache{
-		"http":    func() interface{} { return new(HttpServerConfig) },
-		"socks":   func() interface{} { return new(SocksServerConfig) },
-		"vmess":   func() interface{} { return new(VMessInboundConfig) },
+		"http":  func() interface{} { return new(HttpServerConfig) },
+		"socks": func() interface{} { return new(SocksServerConfig) },
+		"vmess": func() interface{} { return new(VMessInboundConfig) },
 	}, "protocol", "settings")
 
 	outboundConfigLoader = NewJSONConfigLoader(ConfigCreatorCache{
-		"http":    func() interface{} { return new(HttpClientConfig) },
-		"vmess":   func() interface{} { return new(VMessOutboundConfig) },
-		"socks":   func() interface{} { return new(SocksClientConfig) },
-		"dns":     func() interface{} { return new(DnsOutboundConfig) },
+		"http":  func() interface{} { return new(HttpClientConfig) },
+		"vmess": func() interface{} { return new(VMessOutboundConfig) },
+		"socks": func() interface{} { return new(SocksClientConfig) },
 	}, "protocol", "settings")
 )
 
@@ -280,7 +279,6 @@ type Config struct {
 	Port            uint16                 `json:"port"` // Port of this Point server. Deprecated.
 	LogConfig       *LogConfig             `json:"log"`
 	RouterConfig    *RouterConfig          `json:"routing"`
-	DNSConfig       *DnsConfig             `json:"dns"`
 	InboundConfigs  []InboundDetourConfig  `json:"inbounds"`
 	OutboundConfigs []OutboundDetourConfig `json:"outbounds"`
 	InboundConfig   *InboundDetourConfig   `json:"inbound"`        // Deprecated.
@@ -354,14 +352,6 @@ func (c *Config) Build() (*core.Config, error) {
 			return nil, err
 		}
 		config.App = append(config.App, serial.ToTypedMessage(routerConfig))
-	}
-
-	if c.DNSConfig != nil {
-		dnsApp, err := c.DNSConfig.Build()
-		if err != nil {
-			return nil, newError("failed to parse DNS config").Base(err)
-		}
-		config.App = append(config.App, serial.ToTypedMessage(dnsApp))
 	}
 
 	if c.Policy != nil {

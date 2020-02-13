@@ -15,7 +15,6 @@ import (
 	_ "v2ray.com/core/app/stats/command"
 
 	// Other optional features.
-	_ "v2ray.com/core/app/dns"
 	_ "v2ray.com/core/app/log"
 	_ "v2ray.com/core/app/policy"
 	_ "v2ray.com/core/app/reverse"
@@ -23,7 +22,6 @@ import (
 	_ "v2ray.com/core/app/stats"
 
 	// Inbound and outbound proxies.
-	_ "v2ray.com/core/proxy/dns"
 	_ "v2ray.com/core/proxy/http"
 	_ "v2ray.com/core/proxy/socks"
 	_ "v2ray.com/core/proxy/vmess/inbound"

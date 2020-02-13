@@ -11,7 +11,6 @@ import (
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/session"
-	"v2ray.com/core/features/dns"
 	"v2ray.com/core/features/outbound"
 	"v2ray.com/core/features/routing"
 )
@@ -19,8 +18,8 @@ import (
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		r := new(Router)
-		if err := core.RequireFeatures(ctx, func(d dns.Client, ohm outbound.Manager) error {
-			return r.Init(config.(*Config), d, ohm)
+		if err := core.RequireFeatures(ctx, func(ohm outbound.Manager) error {
+			return r.Init(config.(*Config), ohm)
 		}); err != nil {
 			return nil, err
 		}
@@ -33,13 +32,11 @@ type Router struct {
 	domainStrategy Config_DomainStrategy
 	rules          []*Rule
 	balancers      map[string]*Balancer
-	dns            dns.Client
 }
 
 // Init initializes the Router.
-func (r *Router) Init(config *Config, d dns.Client, ohm outbound.Manager) error {
+func (r *Router) Init(config *Config, ohm outbound.Manager) error {
 	r.domainStrategy = config.DomainStrategy
-	r.dns = d
 
 	r.balancers = make(map[string]*Balancer, len(config.BalancingRule))
 	for _, rule := range config.BalancingRule {
@@ -94,10 +91,6 @@ func (r *Router) pickRouteInternal(ctx context.Context) (*Rule, error) {
 		Content:  session.ContentFromContext(ctx),
 	}
 
-	if r.domainStrategy == Config_IpOnDemand {
-		sessionContext.dnsClient = r.dns
-	}
-
 	for _, rule := range r.rules {
 		if rule.Apply(sessionContext) {
 			return rule, nil
@@ -107,8 +100,6 @@ func (r *Router) pickRouteInternal(ctx context.Context) (*Rule, error) {
 	if r.domainStrategy != Config_IpIfNonMatch || !isDomainOutbound(sessionContext.Outbound) {
 		return nil, common.ErrNoClue
 	}
-
-	sessionContext.dnsClient = r.dns
 
 	// Try applying rules again if we have IPs.
 	for _, rule := range r.rules {
@@ -139,8 +130,6 @@ type Context struct {
 	Inbound  *session.Inbound
 	Outbound *session.Outbound
 	Content  *session.Content
-
-	dnsClient dns.Client
 }
 
 func (c *Context) GetTargetIPs() []net.IP {
@@ -154,16 +143,6 @@ func (c *Context) GetTargetIPs() []net.IP {
 
 	if len(c.Outbound.ResolvedIPs) > 0 {
 		return c.Outbound.ResolvedIPs
-	}
-
-	if c.dnsClient != nil {
-		domain := c.Outbound.Target.Address.Domain()
-		ips, err := c.dnsClient.LookupIP(domain)
-		if err == nil {
-			c.Outbound.ResolvedIPs = ips
-			return ips
-		}
-		newError("resolve ip for ", domain).Base(err).WriteToLog()
 	}
 
 	return nil
