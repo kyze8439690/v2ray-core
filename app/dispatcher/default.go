@@ -14,7 +14,6 @@ import (
 	"v2ray.com/core/common/buf"
 	"v2ray.com/core/common/log"
 	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
 	"v2ray.com/core/common/session"
 	"v2ray.com/core/features/outbound"
 	"v2ray.com/core/features/policy"
@@ -142,34 +141,6 @@ func (d *DefaultDispatcher) getLink(ctx context.Context) (*transport.Link, *tran
 	outboundLink := &transport.Link{
 		Reader: uplinkReader,
 		Writer: downlinkWriter,
-	}
-
-	sessionInbound := session.InboundFromContext(ctx)
-	var user *protocol.MemoryUser
-	if sessionInbound != nil {
-		user = sessionInbound.User
-	}
-
-	if user != nil && len(user.Email) > 0 {
-		p := d.policy.ForLevel(user.Level)
-		if p.Stats.UserUplink {
-			name := "user>>>" + user.Email + ">>>traffic>>>uplink"
-			if c, _ := stats.GetOrRegisterCounter(d.stats, name); c != nil {
-				inboundLink.Writer = &SizeStatWriter{
-					Counter: c,
-					Writer:  inboundLink.Writer,
-				}
-			}
-		}
-		if p.Stats.UserDownlink {
-			name := "user>>>" + user.Email + ">>>traffic>>>downlink"
-			if c, _ := stats.GetOrRegisterCounter(d.stats, name); c != nil {
-				outboundLink.Writer = &SizeStatWriter{
-					Counter: c,
-					Writer:  outboundLink.Writer,
-				}
-			}
-		}
 	}
 
 	return inboundLink, outboundLink

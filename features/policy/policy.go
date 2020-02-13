@@ -21,38 +21,20 @@ type Timeout struct {
 	DownlinkOnly time.Duration
 }
 
-// Stats contains settings for stats counters.
-type Stats struct {
-	// Whether or not to enable stat counter for user uplink traffic.
-	UserUplink bool
-	// Whether or not to enable stat counter for user downlink traffic.
-	UserDownlink bool
-}
-
 // Buffer contains settings for internal buffer.
 type Buffer struct {
 	// Size of buffer per connection, in bytes. -1 for unlimited buffer.
 	PerConnection int32
 }
 
-// SystemStats contains stat policy settings on system level.
-type SystemStats struct {
-	// Whether or not to enable stat counter for uplink traffic in inbound handlers.
-	InboundUplink bool
-	// Whether or not to enable stat counter for downlink traffic in inbound handlers.
-	InboundDownlink bool
-}
-
 // System contains policy settings at system level.
 type System struct {
-	Stats  SystemStats
 	Buffer Buffer
 }
 
 // Session is session based settings for controlling V2Ray requests. It contains various settings (or limits) that may differ for different users in the context.
 type Session struct {
 	Timeouts Timeout // Timeout settings
-	Stats    Stats
 	Buffer   Buffer
 }
 
@@ -117,10 +99,6 @@ func SessionDefault() Session {
 			ConnectionIdle: time.Second * 300,
 			UplinkOnly:     time.Second * 1,
 			DownlinkOnly:   time.Second * 1,
-		},
-		Stats: Stats{
-			UserUplink:   false,
-			UserDownlink: false,
 		},
 		Buffer: defaultBufferPolicy(),
 	}

@@ -10,7 +10,6 @@ import (
 	"v2ray.com/core/common/errors"
 	"v2ray.com/core/common/mux"
 	"v2ray.com/core/common/net"
-	"v2ray.com/core/features/policy"
 	"v2ray.com/core/features/stats"
 	"v2ray.com/core/proxy"
 	"v2ray.com/core/transport/internet"
@@ -19,24 +18,6 @@ import (
 func getStatCounter(v *core.Instance, tag string) (stats.Counter, stats.Counter) {
 	var uplinkCounter stats.Counter
 	var downlinkCounter stats.Counter
-
-	policy := v.GetFeature(policy.ManagerType()).(policy.Manager)
-	if len(tag) > 0 && policy.ForSystem().Stats.InboundUplink {
-		statsManager := v.GetFeature(stats.ManagerType()).(stats.Manager)
-		name := "inbound>>>" + tag + ">>>traffic>>>uplink"
-		c, _ := stats.GetOrRegisterCounter(statsManager, name)
-		if c != nil {
-			uplinkCounter = c
-		}
-	}
-	if len(tag) > 0 && policy.ForSystem().Stats.InboundDownlink {
-		statsManager := v.GetFeature(stats.ManagerType()).(stats.Manager)
-		name := "inbound>>>" + tag + ">>>traffic>>>downlink"
-		c, _ := stats.GetOrRegisterCounter(statsManager, name)
-		if c != nil {
-			downlinkCounter = c
-		}
-	}
 
 	return uplinkCounter, downlinkCounter
 }
