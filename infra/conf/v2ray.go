@@ -130,10 +130,8 @@ type Config struct {
 	RouterConfig    *RouterConfig          `json:"routing"`
 	InboundConfigs  []InboundDetourConfig  `json:"inbounds"`
 	OutboundConfigs []OutboundDetourConfig `json:"outbounds"`
-	Transport       *TransportConfig       `json:"transport"`
 	Policy          *PolicyConfig          `json:"policy"`
 	Stats           *StatsConfig           `json:"stats"`
-	Reverse         *ReverseConfig         `json:"reverse"`
 }
 
 func applyTransportConfig(s *StreamConfig, t *TransportConfig) {
@@ -198,14 +196,6 @@ func (c *Config) Build() (*core.Config, error) {
 		config.App = append(config.App, serial.ToTypedMessage(pc))
 	}
 
-	if c.Reverse != nil {
-		r, err := c.Reverse.Build()
-		if err != nil {
-			return nil, err
-		}
-		config.App = append(config.App, serial.ToTypedMessage(r))
-	}
-
 	var inbounds []InboundDetourConfig
 
 	if len(c.InboundConfigs) > 0 {
@@ -227,12 +217,6 @@ func (c *Config) Build() (*core.Config, error) {
 	}
 
 	for _, rawOutboundConfig := range outbounds {
-		if c.Transport != nil {
-			if rawOutboundConfig.StreamSetting == nil {
-				rawOutboundConfig.StreamSetting = &StreamConfig{}
-			}
-			applyTransportConfig(rawOutboundConfig.StreamSetting, c.Transport)
-		}
 		oc, err := rawOutboundConfig.Build()
 		if err != nil {
 			return nil, err
