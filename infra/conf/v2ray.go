@@ -119,15 +119,11 @@ func (c *InboundDetourAllocationConfig) Build() (*proxyman.AllocationStrategy, e
 }
 
 type InboundDetourConfig struct {
-	Protocol       string                         `json:"protocol"`
-	PortRange      *PortRange                     `json:"port"`
-	ListenOn       *Address                       `json:"listen"`
-	Settings       *json.RawMessage               `json:"settings"`
-	Tag            string                         `json:"tag"`
-	Allocation     *InboundDetourAllocationConfig `json:"allocate"`
-	StreamSetting  *StreamConfig                  `json:"streamSettings"`
-	DomainOverride *StringList                    `json:"domainOverride"`
-	SniffingConfig *SniffingConfig                `json:"sniffing"`
+	Protocol  string           `json:"protocol"`
+	PortRange *PortRange       `json:"port"`
+	ListenOn  *Address         `json:"listen"`
+	Settings  *json.RawMessage `json:"settings"`
+	Tag       string           `json:"tag"`
 }
 
 // Build implements Buildable.
@@ -144,43 +140,6 @@ func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 			return nil, newError("unable to listen on domain address: ", c.ListenOn.Domain())
 		}
 		receiverSettings.Listen = c.ListenOn.Build()
-	}
-	if c.Allocation != nil {
-		concurrency := -1
-		if c.Allocation.Concurrency != nil && c.Allocation.Strategy == "random" {
-			concurrency = int(*c.Allocation.Concurrency)
-		}
-		portRange := int(c.PortRange.To - c.PortRange.From + 1)
-		if concurrency >= 0 && concurrency >= portRange {
-			return nil, newError("not enough ports. concurrency = ", concurrency, " ports: ", c.PortRange.From, " - ", c.PortRange.To)
-		}
-
-		as, err := c.Allocation.Build()
-		if err != nil {
-			return nil, err
-		}
-		receiverSettings.AllocationStrategy = as
-	}
-	if c.StreamSetting != nil {
-		ss, err := c.StreamSetting.Build()
-		if err != nil {
-			return nil, err
-		}
-		receiverSettings.StreamSettings = ss
-	}
-	if c.SniffingConfig != nil {
-		s, err := c.SniffingConfig.Build()
-		if err != nil {
-			return nil, newError("failed to build sniffing config").Base(err)
-		}
-		receiverSettings.SniffingSettings = s
-	}
-	if c.DomainOverride != nil {
-		kp, err := toProtocolList(*c.DomainOverride)
-		if err != nil {
-			return nil, newError("failed to parse inbound detour config").Base(err)
-		}
-		receiverSettings.DomainOverride = kp
 	}
 
 	settings := []byte("{}")
@@ -359,12 +318,6 @@ func (c *Config) Build() (*core.Config, error) {
 	}
 
 	for _, rawInboundConfig := range inbounds {
-		if c.Transport != nil {
-			if rawInboundConfig.StreamSetting == nil {
-				rawInboundConfig.StreamSetting = &StreamConfig{}
-			}
-			applyTransportConfig(rawInboundConfig.StreamSetting, c.Transport)
-		}
 		ic, err := rawInboundConfig.Build()
 		if err != nil {
 			return nil, err
