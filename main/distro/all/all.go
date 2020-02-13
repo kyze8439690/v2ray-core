@@ -21,7 +21,6 @@ import (
 	_ "v2ray.com/core/app/stats"
 
 	// Inbound and outbound proxies.
-	_ "v2ray.com/core/proxy/http"
 	_ "v2ray.com/core/proxy/socks"
 	_ "v2ray.com/core/proxy/vmess/outbound"
 
