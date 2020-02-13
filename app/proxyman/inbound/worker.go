@@ -6,7 +6,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"v2ray.com/core/app/proxyman"
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/buf"
 	"v2ray.com/core/common/net"
@@ -38,7 +37,6 @@ type tcpWorker struct {
 	recvOrigDest    bool
 	tag             string
 	dispatcher      routing.Dispatcher
-	sniffingConfig  *proxyman.SniffingConfig
 	uplinkCounter   stats.Counter
 	downlinkCounter stats.Counter
 
@@ -82,10 +80,6 @@ func (w *tcpWorker) callback(conn internet.Connection) {
 		Tag:     w.tag,
 	})
 	content := new(session.Content)
-	if w.sniffingConfig != nil {
-		content.SniffingRequest.Enabled = w.sniffingConfig.Enabled
-		content.SniffingRequest.OverrideDestinationForProtocol = w.sniffingConfig.DestinationOverride
-	}
 	ctx = session.ContextWithContent(ctx, content)
 	if w.uplinkCounter != nil || w.downlinkCounter != nil {
 		conn = &internet.StatCouterConnection{

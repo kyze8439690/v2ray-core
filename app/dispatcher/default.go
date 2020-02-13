@@ -23,10 +23,6 @@ import (
 	"v2ray.com/core/transport/pipe"
 )
 
-var (
-	errSniffingTimeout = newError("timeout on sniffing")
-)
-
 type cachedReader struct {
 	sync.Mutex
 	reader *pipe.Reader
@@ -166,18 +162,7 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 		content = new(session.Content)
 		ctx = session.ContextWithContent(ctx, content)
 	}
-	sniffingRequest := content.SniffingRequest
-	if destination.Network != net.Network_TCP || !sniffingRequest.Enabled {
-		go d.routedDispatch(ctx, outbound, destination)
-	} else {
-		go func() {
-			cReader := &cachedReader{
-				reader: outbound.Reader.(*pipe.Reader),
-			}
-			outbound.Reader = cReader
-			d.routedDispatch(ctx, outbound, destination)
-		}()
-	}
+	go d.routedDispatch(ctx, outbound, destination)
 	return inbound, nil
 }
 
