@@ -8,12 +8,3 @@ func isTCPSocket(network string) bool {
 		return false
 	}
 }
-
-func isUDPSocket(network string) bool {
-	switch network {
-	case "udp", "udp4", "udp6":
-		return true
-	default:
-		return false
-	}
-}

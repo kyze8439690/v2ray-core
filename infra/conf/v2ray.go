@@ -2,7 +2,6 @@ package conf
 
 import (
 	"encoding/json"
-	"strings"
 
 	"v2ray.com/core"
 	"v2ray.com/core/app/dispatcher"
@@ -19,21 +18,6 @@ var (
 		"vmess": func() interface{} { return new(VMessOutboundConfig) },
 	}, "protocol", "settings")
 )
-
-func toProtocolList(s []string) ([]proxyman.KnownProtocols, error) {
-	kp := make([]proxyman.KnownProtocols, 0, 8)
-	for _, p := range s {
-		switch strings.ToLower(p) {
-		case "http":
-			kp = append(kp, proxyman.KnownProtocols_HTTP)
-		case "https", "tls", "ssl":
-			kp = append(kp, proxyman.KnownProtocols_TLS)
-		default:
-			return nil, newError("Unknown protocol: ", p)
-		}
-	}
-	return kp, nil
-}
 
 type InboundDetourConfig struct {
 	Protocol  string           `json:"protocol"`
@@ -124,18 +108,6 @@ type Config struct {
 	InboundConfigs  []InboundDetourConfig  `json:"inbounds"`
 	OutboundConfigs []OutboundDetourConfig `json:"outbounds"`
 	Policy          *PolicyConfig          `json:"policy"`
-}
-
-func applyTransportConfig(s *StreamConfig, t *TransportConfig) {
-	if s.TCPSettings == nil {
-		s.TCPSettings = t.TCPConfig
-	}
-	if s.WSSettings == nil {
-		s.WSSettings = t.WSConfig
-	}
-	if s.HTTPSettings == nil {
-		s.HTTPSettings = t.HTTPConfig
-	}
 }
 
 // Build implements Buildable.

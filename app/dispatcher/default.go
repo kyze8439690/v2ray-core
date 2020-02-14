@@ -6,12 +6,9 @@ package dispatcher
 
 import (
 	"context"
-	"sync"
-	"time"
 
 	"v2ray.com/core"
 	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
 	"v2ray.com/core/common/log"
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/session"
@@ -21,65 +18,6 @@ import (
 	"v2ray.com/core/transport"
 	"v2ray.com/core/transport/pipe"
 )
-
-type cachedReader struct {
-	sync.Mutex
-	reader *pipe.Reader
-	cache  buf.MultiBuffer
-}
-
-func (r *cachedReader) Cache(b *buf.Buffer) {
-	mb, _ := r.reader.ReadMultiBufferTimeout(time.Millisecond * 100)
-	r.Lock()
-	if !mb.IsEmpty() {
-		r.cache, _ = buf.MergeMulti(r.cache, mb)
-	}
-	b.Clear()
-	rawBytes := b.Extend(buf.Size)
-	n := r.cache.Copy(rawBytes)
-	b.Resize(0, int32(n))
-	r.Unlock()
-}
-
-func (r *cachedReader) readInternal() buf.MultiBuffer {
-	r.Lock()
-	defer r.Unlock()
-
-	if r.cache != nil && !r.cache.IsEmpty() {
-		mb := r.cache
-		r.cache = nil
-		return mb
-	}
-
-	return nil
-}
-
-func (r *cachedReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
-	mb := r.readInternal()
-	if mb != nil {
-		return mb, nil
-	}
-
-	return r.reader.ReadMultiBuffer()
-}
-
-func (r *cachedReader) ReadMultiBufferTimeout(timeout time.Duration) (buf.MultiBuffer, error) {
-	mb := r.readInternal()
-	if mb != nil {
-		return mb, nil
-	}
-
-	return r.reader.ReadMultiBufferTimeout(timeout)
-}
-
-func (r *cachedReader) Interrupt() {
-	r.Lock()
-	if r.cache != nil {
-		r.cache = buf.ReleaseMulti(r.cache)
-	}
-	r.Unlock()
-	r.reader.Interrupt()
-}
 
 // DefaultDispatcher is a default implementation of Dispatcher.
 type DefaultDispatcher struct {
@@ -137,10 +75,6 @@ func (d *DefaultDispatcher) getLink(ctx context.Context) (*transport.Link, *tran
 	}
 
 	return inboundLink, outboundLink
-}
-
-func shouldOverride(domainOverride []string) bool {
-	return false
 }
 
 // Dispatch implements routing.Dispatcher.

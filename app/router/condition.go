@@ -96,22 +96,6 @@ func (m *DomainMatcher) Apply(ctx *Context) bool {
 	return m.ApplyDomain(dest.Address.Domain())
 }
 
-func getIPsFromSource(ctx *Context) []net.IP {
-	if ctx.Inbound == nil || !ctx.Inbound.Source.IsValid() {
-		return nil
-	}
-	dest := ctx.Inbound.Source
-	if dest.Address.Family().IsDomain() {
-		return nil
-	}
-
-	return []net.IP{dest.Address.IP()}
-}
-
-func getIPsFromTarget(ctx *Context) []net.IP {
-	return ctx.GetTargetIPs()
-}
-
 type PortMatcher struct {
 	port net.MemoryPortList
 }
@@ -253,10 +237,7 @@ func NewAttributeMatcher(code string) (*AttributeMatcher, error) {
 		return nil, newError("attr rule").Base(err)
 	}
 	p, err := starlark.FileProgram(starFile, func(name string) bool {
-		if name == "attrs" {
-			return true
-		}
-		return false
+		return name == "attrs"
 	})
 	if err != nil {
 		return nil, err

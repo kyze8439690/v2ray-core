@@ -61,10 +61,6 @@ func (r *Router) PickRoute(ctx context.Context) (string, error) {
 	return rule.GetTag()
 }
 
-func isDomainOutbound(outbound *session.Outbound) bool {
-	return outbound != nil && outbound.Target.IsValid() && outbound.Target.Address.Family().IsDomain()
-}
-
 // PickRoute implements routing.Router.
 func (r *Router) pickRouteInternal(ctx context.Context) (*Rule, error) {
 	sessionContext := &Context{
