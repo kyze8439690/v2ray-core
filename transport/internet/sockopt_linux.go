@@ -3,6 +3,7 @@ package internet
 import (
 	"net"
 	"syscall"
+
 	"golang.org/x/sys/unix"
 )
 
@@ -64,12 +65,6 @@ func applyOutboundSocketOptions(network string, address string, fd uintptr, conf
 		}
 	}
 
-	if config.Tproxy.IsEnabled() {
-		if err := syscall.SetsockoptInt(int(fd), syscall.SOL_IP, syscall.IP_TRANSPARENT, 1); err != nil {
-			return newError("failed to set IP_TRANSPARENT").Base(err)
-		}
-	}
-
 	return nil
 }
 
@@ -89,12 +84,6 @@ func applyInboundSocketOptions(network string, fd uintptr, config *SocketConfig)
 			if err := syscall.SetsockoptInt(int(fd), syscall.SOL_TCP, TCP_FASTOPEN, 0); err != nil {
 				return newError("failed to set TCP_FASTOPEN=0").Base(err)
 			}
-		}
-	}
-
-	if config.Tproxy.IsEnabled() {
-		if err := syscall.SetsockoptInt(int(fd), syscall.SOL_IP, syscall.IP_TRANSPARENT, 1); err != nil {
-			return newError("failed to set IP_TRANSPARENT").Base(err)
 		}
 	}
 

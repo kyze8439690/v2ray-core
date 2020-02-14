@@ -48,28 +48,17 @@ func NewAlwaysOnInboundHandler(ctx context.Context, tag string, receiverConfig *
 		return nil, newError("failed to parse stream config").Base(err).AtWarning()
 	}
 
-	if receiverConfig.ReceiveOriginalDestination {
-		if mss.SocketSettings == nil {
-			mss.SocketSettings = &internet.SocketConfig{}
-		}
-		if mss.SocketSettings.Tproxy == internet.SocketConfig_Off {
-			mss.SocketSettings.Tproxy = internet.SocketConfig_Redirect
-		}
-		mss.SocketSettings.ReceiveOriginalDestAddress = true
-	}
-
 	for port := pr.From; port <= pr.To; port++ {
 		if net.HasNetwork(nl, net.Network_TCP) {
 			newError("creating stream worker on ", address, ":", port).AtDebug().WriteToLog()
 
 			worker := &tcpWorker{
-				address:      address,
-				port:         net.Port(port),
-				proxy:        p,
-				stream:       mss,
-				recvOrigDest: receiverConfig.ReceiveOriginalDestination,
-				tag:          tag,
-				dispatcher:   h.mux,
+				address:    address,
+				port:       net.Port(port),
+				proxy:      p,
+				stream:     mss,
+				tag:        tag,
+				dispatcher: h.mux,
 			}
 			h.workers = append(h.workers, worker)
 		}

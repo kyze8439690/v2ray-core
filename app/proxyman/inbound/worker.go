@@ -16,7 +16,6 @@ import (
 	"v2ray.com/core/features/routing"
 	"v2ray.com/core/proxy"
 	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/internet/tcp"
 	"v2ray.com/core/transport/internet/udp"
 	"v2ray.com/core/transport/pipe"
 )
@@ -29,22 +28,14 @@ type worker interface {
 }
 
 type tcpWorker struct {
-	address      net.Address
-	port         net.Port
-	proxy        proxy.Inbound
-	stream       *internet.MemoryStreamConfig
-	recvOrigDest bool
-	tag          string
-	dispatcher   routing.Dispatcher
+	address    net.Address
+	port       net.Port
+	proxy      proxy.Inbound
+	stream     *internet.MemoryStreamConfig
+	tag        string
+	dispatcher routing.Dispatcher
 
 	hub internet.Listener
-}
-
-func getTProxyType(s *internet.MemoryStreamConfig) internet.SocketConfig_TProxyMode {
-	if s == nil || s.SocketSettings == nil {
-		return internet.SocketConfig_Off
-	}
-	return s.SocketSettings.Tproxy
 }
 
 func (w *tcpWorker) callback(conn internet.Connection) {
@@ -52,25 +43,6 @@ func (w *tcpWorker) callback(conn internet.Connection) {
 	sid := session.NewID()
 	ctx = session.ContextWithID(ctx, sid)
 
-	if w.recvOrigDest {
-		var dest net.Destination
-		switch getTProxyType(w.stream) {
-		case internet.SocketConfig_Redirect:
-			d, err := tcp.GetOriginalDestination(conn)
-			if err != nil {
-				newError("failed to get original destination").Base(err).WriteToLog(session.ExportIDToError(ctx))
-			} else {
-				dest = d
-			}
-		case internet.SocketConfig_TProxy:
-			dest = net.DestinationFromAddr(conn.LocalAddr())
-		}
-		if dest.IsValid() {
-			ctx = session.ContextWithOutbound(ctx, &session.Outbound{
-				Target: dest,
-			})
-		}
-	}
 	ctx = session.ContextWithInbound(ctx, &session.Inbound{
 		Source:  net.DestinationFromAddr(conn.RemoteAddr()),
 		Gateway: net.TCPDestination(w.address, w.port),

@@ -2,8 +2,9 @@ package proxyman
 
 import (
 	fmt "fmt"
-	proto "github.com/golang/protobuf/proto"
 	math "math"
+
+	proto "github.com/golang/protobuf/proto"
 	net "v2ray.com/core/common/net"
 	serial "v2ray.com/core/common/serial"
 	internet "v2ray.com/core/transport/internet"
@@ -306,10 +307,9 @@ type ReceiverConfig struct {
 	// PortRange specifies the ports which the Receiver should listen on.
 	PortRange *net.PortRange `protobuf:"bytes,1,opt,name=port_range,json=portRange,proto3" json:"port_range,omitempty"`
 	// Listen specifies the IP address that the Receiver should listen on.
-	Listen                     *net.IPOrDomain        `protobuf:"bytes,2,opt,name=listen,proto3" json:"listen,omitempty"`
-	AllocationStrategy         *AllocationStrategy    `protobuf:"bytes,3,opt,name=allocation_strategy,json=allocationStrategy,proto3" json:"allocation_strategy,omitempty"`
-	StreamSettings             *internet.StreamConfig `protobuf:"bytes,4,opt,name=stream_settings,json=streamSettings,proto3" json:"stream_settings,omitempty"`
-	ReceiveOriginalDestination bool                   `protobuf:"varint,5,opt,name=receive_original_destination,json=receiveOriginalDestination,proto3" json:"receive_original_destination,omitempty"`
+	Listen             *net.IPOrDomain        `protobuf:"bytes,2,opt,name=listen,proto3" json:"listen,omitempty"`
+	AllocationStrategy *AllocationStrategy    `protobuf:"bytes,3,opt,name=allocation_strategy,json=allocationStrategy,proto3" json:"allocation_strategy,omitempty"`
+	StreamSettings     *internet.StreamConfig `protobuf:"bytes,4,opt,name=stream_settings,json=streamSettings,proto3" json:"stream_settings,omitempty"`
 	// Override domains for the given protocol.
 	// Deprecated. Use sniffing_settings.
 	DomainOverride       []KnownProtocols `protobuf:"varint,7,rep,packed,name=domain_override,json=domainOverride,proto3,enum=v2ray.core.app.proxyman.KnownProtocols" json:"domain_override,omitempty"` // Deprecated: Do not use.
@@ -370,13 +370,6 @@ func (m *ReceiverConfig) GetStreamSettings() *internet.StreamConfig {
 		return m.StreamSettings
 	}
 	return nil
-}
-
-func (m *ReceiverConfig) GetReceiveOriginalDestination() bool {
-	if m != nil {
-		return m.ReceiveOriginalDestination
-	}
-	return false
 }
 
 // Deprecated: Do not use.

@@ -2,8 +2,9 @@ package internet
 
 import (
 	fmt "fmt"
-	proto "github.com/golang/protobuf/proto"
 	math "math"
+
+	proto "github.com/golang/protobuf/proto"
 	serial "v2ray.com/core/common/serial"
 )
 
@@ -305,8 +306,6 @@ type SocketConfig struct {
 	Mark int32 `protobuf:"varint,1,opt,name=mark,proto3" json:"mark,omitempty"`
 	// TFO is the state of TFO settings.
 	Tfo SocketConfig_TCPFastOpenState `protobuf:"varint,2,opt,name=tfo,proto3,enum=v2ray.core.transport.internet.SocketConfig_TCPFastOpenState" json:"tfo,omitempty"`
-	// TProxy is for enabling TProxy socket option.
-	Tproxy SocketConfig_TProxyMode `protobuf:"varint,3,opt,name=tproxy,proto3,enum=v2ray.core.transport.internet.SocketConfig_TProxyMode" json:"tproxy,omitempty"`
 	// ReceiveOriginalDestAddress is for enabling IP_RECVORIGDSTADDR socket option.
 	// This option is for UDP only.
 	ReceiveOriginalDestAddress bool     `protobuf:"varint,4,opt,name=receive_original_dest_address,json=receiveOriginalDestAddress,proto3" json:"receive_original_dest_address,omitempty"`
@@ -354,13 +353,6 @@ func (m *SocketConfig) GetTfo() SocketConfig_TCPFastOpenState {
 		return m.Tfo
 	}
 	return SocketConfig_AsIs
-}
-
-func (m *SocketConfig) GetTproxy() SocketConfig_TProxyMode {
-	if m != nil {
-		return m.Tproxy
-	}
-	return SocketConfig_Off
 }
 
 func (m *SocketConfig) GetReceiveOriginalDestAddress() bool {
