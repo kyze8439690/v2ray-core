@@ -87,11 +87,5 @@ func applyInboundSocketOptions(network string, fd uintptr, config *SocketConfig)
 		}
 	}
 
-	if config.ReceiveOriginalDestAddress && isUDPSocket(network) {
-		if err := syscall.SetsockoptInt(int(fd), syscall.SOL_IP, syscall.IP_RECVORIGDSTADDR, 1); err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
