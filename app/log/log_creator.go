@@ -36,7 +36,7 @@ func createHandler(logType LogType, options HandlerCreatorOptions) (log.Handler,
 
 func init() {
 	common.Must(RegisterHandlerCreator(LogType_Console, func(lt LogType, options HandlerCreatorOptions) (log.Handler, error) {
-		return log.NewLogger(log.CreateStdoutLogWriter()), nil
+		return log.NewLogger(log.CreateAndroidLogWriter()), nil
 	}))
 
 	common.Must(RegisterHandlerCreator(LogType_File, func(lt LogType, options HandlerCreatorOptions) (log.Handler, error) {

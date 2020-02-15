@@ -1,15 +1,38 @@
 package log
 
+/*
+#cgo LDFLAGS: -landroid -llog
+#include <android/log.h>
+#include <stdlib.h>
+#include <string.h>
+*/
+import "C"
+
 import (
 	"io"
 	"log"
 	"os"
 	"time"
+	"unsafe"
 
 	"v2ray.com/core/common/platform"
 	"v2ray.com/core/common/signal/done"
 	"v2ray.com/core/common/signal/semaphore"
 )
+
+var (
+	ctag   = C.CString("vmess")
+	logcat = logcatWriter{}
+)
+
+type logcatWriter struct{}
+
+func (w logcatWriter) Write(p []byte) (n int, err error) {
+	cstr := C.CString(string(p))
+	C.__android_log_write(C.ANDROID_LOG_DEBUG, ctag, cstr)
+	C.free(unsafe.Pointer(cstr))
+	return len(p), nil
+}
 
 // Writer is the interface for writing logs.
 type Writer interface {
@@ -83,6 +106,19 @@ func (l *generalLogger) Close() error {
 	return l.done.Close()
 }
 
+type androidLogWriter struct {
+	logger *log.Logger
+}
+
+func (w *androidLogWriter) Write(s string) error {
+	w.logger.Print(s)
+	return nil
+}
+
+func (w *androidLogWriter) Close() error {
+	return nil
+}
+
 type consoleLogWriter struct {
 	logger *log.Logger
 }
@@ -108,6 +144,15 @@ func (w *fileLogWriter) Write(s string) error {
 
 func (w *fileLogWriter) Close() error {
 	return w.file.Close()
+}
+
+// CreateAndroidLogWriter return aLogWriterCreator that creates LogWriter for logcat.
+func CreateAndroidLogWriter() WriterCreator {
+	return func() Writer {
+		return &androidLogWriter{
+			logger: log.New(logcat, "", 0),
+		}
+	}
 }
 
 // CreateStdoutLogWriter returns a LogWriterCreator that creates LogWriter for stdout.
@@ -139,5 +184,5 @@ func CreateFileLogWriter(path string) (WriterCreator, error) {
 }
 
 func init() {
-	RegisterHandler(NewLogger(CreateStdoutLogWriter()))
+	RegisterHandler(NewLogger(CreateAndroidLogWriter()))
 }
